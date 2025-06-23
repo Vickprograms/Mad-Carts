@@ -1,0 +1,1 @@
+DATABASE = PGPASSWORD=ExU8Lz8VDgxBVVbQXCHP0AefguK4Vlzt psql -h dpg-d1cqn16mcj7s73b8t2s0-a.frankfurt-postgres.render.com -U mad_carts_user -d mad_carts -p 5432
