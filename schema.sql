@@ -55,3 +55,16 @@ CREATE TABLE Feedback (
     media TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE RecentSearches (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES Users(id) ON DELETE CASCADE,
+    search_term TEXT NOT NULL,
+    searched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE RecentVisits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES Users(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES Products(id) ON DELETE CASCADE,
+    visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
