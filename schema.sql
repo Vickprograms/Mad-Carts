@@ -1,6 +1,7 @@
 -- Users table: includes customers and delivery drivers
+-- Users table
 CREATE TABLE Users (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
     phone_no VARCHAR(20),
     username VARCHAR(100) UNIQUE NOT NULL,
@@ -10,7 +11,7 @@ CREATE TABLE Users (
 
 -- Products table
 CREATE TABLE Products (
-    id BIGSERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     category VARCHAR(100),
     price NUMERIC(10, 2) NOT NULL,
@@ -21,36 +22,49 @@ CREATE TABLE Products (
     brand VARCHAR(100)
 );
 
--- Orders table: contains user and assigned driver
+-- Orders table
 CREATE TABLE Orders (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES Users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES Users(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     received_at TIMESTAMP,
     condition TEXT,
     delivery_date DATE,
     pickup_location TEXT,
     payment_method VARCHAR(50),
-    delivery_driver_id BIGINT REFERENCES Users(id),
+    delivery_driver_id UUID REFERENCES Users(id),
     status VARCHAR(50) DEFAULT 'Pending'
 );
 
--- Order items table: links orders and products
+-- OrderItems table
 CREATE TABLE OrderItems (
-    id BIGSERIAL PRIMARY KEY,
-    order_id BIGINT NOT NULL REFERENCES Orders(id) ON DELETE CASCADE,
-    product_id BIGINT NOT NULL REFERENCES Products(id),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID NOT NULL REFERENCES Orders(id) ON DELETE CASCADE,
+    product_id UUID NOT NULL REFERENCES Products(id),
     quantity INT NOT NULL,
     price NUMERIC(10, 2) NOT NULL
 );
 
--- Feedback table: one feedback per product per user
+-- Feedback table
 CREATE TABLE Feedback (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES Users(id),
-    product_id BIGINT NOT NULL REFERENCES Products(id),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES Users(id),
+    product_id UUID NOT NULL REFERENCES Products(id),
     rating INT CHECK (rating >= 1 AND rating <= 5),
     feedback_message TEXT,
     media TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE RecentSearches (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES Users(id) ON DELETE CASCADE,
+    search_term TEXT NOT NULL,
+    searched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE RecentVisits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES Users(id) ON DELETE CASCADE,
+    product_id UUID REFERENCES Products(id) ON DELETE CASCADE,
+    visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
