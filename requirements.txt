@@ -1,7 +1,7 @@
-Flask
-Flask-SQLAlchemy
-Flask-Migrate
-Flask-JWT-Extended
-psycopg2-binary
-python-dotenv
-Werkzeug
+Flask==2.3.3
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+psycopg2-binary==2.9.9
+marshmallow==3.21.1
+marshmallow-sqlalchemy==0.29.0
+python-dotenv==1.0.1
