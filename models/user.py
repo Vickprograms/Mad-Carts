@@ -11,6 +11,7 @@ class User(db.Model):
     phone_no = db.Column(db.String(20))
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
+    role = db.Column(db.String(20), default="customer")
     is_driver = db.Column(db.Boolean, default=False)
 
     def set_password(self, raw_password):

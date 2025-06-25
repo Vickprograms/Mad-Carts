@@ -13,11 +13,16 @@ def register():
 
     if User.query.filter_by(username=data.get("username")).first():
         return jsonify({"error": "Username already taken"}), 400
+    
+    role = data.get("role", "customer").lower()
+    if role not in ["customer", "driver", "admin"]:
+        return jsonify({"error": "Invalid role"}), 400
 
     user = User(
         email=data["email"],
         username=data["username"],
         phone_no=data.get("phone_no"),
+        role=role,
         is_driver=data.get("is_driver", False)
     )
     user.set_password(data["password"])
@@ -25,7 +30,7 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({"message": "User registered successfully"}), 201
+    return jsonify({"message": f"{role.capitalize()} registered successfully"}), 201
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
