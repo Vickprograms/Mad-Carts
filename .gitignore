@@ -1,12 +1,5 @@
-# 🐍 Python
+# .gitignore
 __pycache__/
-*.py[cod]
-
-# ⚙️ Virtual Environment
+*.pyc
 venv/
-
-# 🔐 Env file
 .env
-
-# VSCode config (optional)
-.vscode/
