@@ -4,6 +4,7 @@ from extensions import db, migrate, jwt
 from routes.auth_routes import auth_bp
 from routes.cart_routes import cart_bp
 from routes.order_routes import order_bp
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
@@ -16,6 +17,8 @@ def create_app():
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(cart_bp, url_prefix='/api')
     app.register_blueprint(order_bp, url_prefix='/api')
+
+    CORS(app)
     
 
     return app
