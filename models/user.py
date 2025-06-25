@@ -12,10 +12,18 @@ class User(db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
     role = db.Column(db.String(20), default="customer")
-    is_driver = db.Column(db.Boolean, default=False)
 
     def set_password(self, raw_password):
         self.password = generate_password_hash(raw_password)
 
     def check_password(self, raw_password):
         return check_password_hash(self.password, raw_password)
+
+    def serialize(self):
+        return {
+            "id": str(self.id),
+            "email": self.email,
+            "username": self.username,
+            "phone_no": self.phone_no,
+            "role": self.role
+        }
