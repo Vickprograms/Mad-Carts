@@ -55,6 +55,12 @@ def get_by_category():
     result, status = product_manager.get_products_by_category(data)
     return jsonify(result), status
 
+@app.route('/getuniquecategories', methods=['GET'])
+def get_unique_categories():
+    result, status = product_manager.get_unique_categories()
+    return jsonify(result), status
+
+
 @app.route('/create-history', methods=["POST"])
 def create_history():
     data = request.get_json()

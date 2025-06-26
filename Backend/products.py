@@ -146,6 +146,19 @@ class Products:
         except DatabaseError as e:
             return [{'error': str(e)}], 500
 
+    def get_unique_categories(self):
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute("""
+                    SELECT DISTINCT category FROM Products
+                """)
+                rows = cur.fetchall()
+                categories = [row[0] for row in rows if row[0] is not None]
+                return categories, 200
+        except Exception as e:
+            return [{'error': str(e)}], 500
+        
+
     def get_products_by_category(self,data):
 
         """get data by Category to enable categorizinn"""
