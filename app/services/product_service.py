@@ -63,8 +63,8 @@ class ProductService:
         with self.conn.cursor() as cur:
             cur.execute("""
                 SELECT * FROM products
-                WHERE name ILIKE %s OR description ILIKE %s
-            """, (f"%{term}%", f"%{term}%"))
+                WHERE name ILIKE %s OR description ILIKE %s OR category ILIKE %s OR brand ILIKE %s
+            """, (f"%{term}%", f"%{term}%", f"%{term}%", f"%{term}%"))
             return cur.fetchall()
 
     def filter_products(self, filters):
@@ -159,3 +159,41 @@ class ProductService:
             self.conn.rollback()
             return {'error': str(e)}
         
+
+    def log_search_history(self, user_id, search_term):
+        """Store user search history securely using JWT identity."""
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO RecentSearches (id, user_id, search_term, searched_at)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING id;
+                    """,
+                    (
+                        str(uuid.uuid4()),
+                        user_id,
+                        search_term,
+                        datetime.utcnow()
+                    )
+                )
+                new_search = cur.fetchone()[0]
+                self.conn.commit()
+                return {'message': 'Search logged', 'search_id': new_search}, 201
+
+        except Exception as e:
+            self.conn.rollback()
+            return {'error': str(e)}, 500
+    
+
+    def get_search_history(self, user_id):
+        try:
+            with self.conn.cursor() as cur:
+                cur.execute(
+                    "SELECT search_term, searched_at FROM RecentSearches WHERE user_id = %s ORDER BY searched_at DESC",
+                    (user_id,)
+                )
+                results = cur.fetchall()
+                return [{'term': row[0], 'time': row[1].isoformat()} for row in results]
+        except Exception as e:
+            return {'error': str(e)}, 500
