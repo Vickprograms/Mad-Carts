@@ -9,37 +9,30 @@ carts_schema = CartSchema(many=True)
 cart_item_schema = CartItemSchema()
 cart_items_schema = CartItemSchema(many=True)
 
-# -----------------------------------
-# 🔍 GET all carts
-# -----------------------------------
+
 @cart_bp.route('/carts', methods=['GET'])
 def get_carts():
     carts = Cart.query.all()
     return carts_schema.dump(carts), 200
 
-# -----------------------------------
-# 🔍 GET one cart by ID
-# -----------------------------------
 @cart_bp.route('/carts/<int:id>', methods=['GET'])
 def get_cart(id):
     cart = Cart.query.get_or_404(id)
     return cart_schema.dump(cart), 200
 
-# -----------------------------------
-# ➕ CREATE a new cart
-# -----------------------------------
+
 @cart_bp.route('/carts', methods=['POST'])
 def create_cart():
     data = request.get_json()
     
-    # Validate and load cart data
+    
     errors = cart_schema.validate(data)
     if errors:
         return jsonify(errors), 400
 
     cart = Cart(user_id=data['user_id'])
 
-    # Handle cart items if provided
+    
     cart_items_data = data.get('cart_items', [])
     for item_data in cart_items_data:
         item_errors = cart_item_schema.validate(item_data)
@@ -57,10 +50,7 @@ def create_cart():
     db.session.commit()
 
     return cart_schema.dump(cart), 201
-
-# -----------------------------------
-# 🔄 UPDATE a cart
-# -----------------------------------
+    
 @cart_bp.route('/carts/<int:id>', methods=['PATCH'])
 def update_cart(id):
     cart = Cart.query.get_or_404(id)
@@ -72,9 +62,6 @@ def update_cart(id):
     db.session.commit()
     return cart_schema.dump(cart), 200
 
-# -----------------------------------
-# ❌ DELETE a cart
-# -----------------------------------
 @cart_bp.route('/carts/<int:id>', methods=['DELETE'])
 def delete_cart(id):
     cart = Cart.query.get_or_404(id)
