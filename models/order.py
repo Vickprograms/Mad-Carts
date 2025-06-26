@@ -6,9 +6,6 @@ from sqlalchemy.orm import relationship
 from extensions import db
 from marshmallow import Schema, fields, validate, validates_schema, ValidationError
 
-
-
-
 class Order(db.Model):
     __tablename__ = 'orders'
 

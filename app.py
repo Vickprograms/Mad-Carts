@@ -7,6 +7,7 @@ from routes.cart_routes import cart_bp
 from routes.order_routes import order_bp
 from routes.user_routes import user_bp
 from routes.delivery_routes import delivery_bp
+from routes.product_routes import product_bp
 
 def create_app():
     app = Flask(__name__)
@@ -20,6 +21,7 @@ def create_app():
     app.register_blueprint(cart_bp, url_prefix='/api')
     app.register_blueprint(order_bp, url_prefix='/api')
     app.register_blueprint(user_bp)
+    app.register_blueprint(product_bp, url_prefix="/products")
     app.register_blueprint(delivery_bp)
 
     CORS(app)
