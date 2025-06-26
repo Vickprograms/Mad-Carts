@@ -60,13 +60,14 @@ def delete_product_controller(product_id):
         return jsonify({'error': str(e)}), 500
 
 def search_products_controller():
+    term = request.args.get('term', '').strip()
     try:
-        term = request.args.get('term', '')
-        results = product_service.search_products(term)
-        return jsonify(results), 200
+        products = product_service.search_products(term)
+        return jsonify(products), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+        
 def filter_products_controller():
     try:
         filters = request.args.to_dict()
@@ -83,3 +84,7 @@ def sort_products_controller():
         return jsonify(sorted_products), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+def get_unique_categories():
+    result = db.session.execute(db.select(Product.category).distinct())
+    return [row[0] for row in result if row[0] is not None]

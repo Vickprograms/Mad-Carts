@@ -15,6 +15,7 @@ class ProductService:
         with self.conn.cursor() as cur:
             cur.execute("SELECT * FROM products WHERE id = %s", (product_id,))
             return cur.fetchone()
+            
 
     def create_product(self, data):
         with self.conn.cursor() as cur:
@@ -60,12 +61,30 @@ class ProductService:
             self.conn.commit()
 
     def search_products(self, term):
+        products = []
         with self.conn.cursor() as cur:
             cur.execute("""
-                SELECT * FROM products
+                SELECT id, name, category, price, quantity, size, media, description, brand
+                FROM products
                 WHERE name ILIKE %s OR description ILIKE %s OR category ILIKE %s OR brand ILIKE %s
-            """, (f"%{term}%", f"%{term}%", f"%{term}%", f"%{term}%"))
-            return cur.fetchall()
+                LIMIT 10;
+             """, (f"%{term}%",)*4)
+            rows = cur.fetchall()
+
+            for row in rows:
+                products.append({
+                'id': row[0],
+                'name': row[1],
+                'category': row[2],
+                'price': float(row[3]),
+                'quantity': row[4],
+                'size': row[5],
+                'media': row[6],
+                'description': row[7],
+                'brand': row[8]
+                })
+            return products  
+
 
     def filter_products(self, filters):
         query = "SELECT * FROM products WHERE "
@@ -197,3 +216,13 @@ class ProductService:
                 return [{'term': row[0], 'time': row[1].isoformat()} for row in results]
         except Exception as e:
             return {'error': str(e)}, 500
+
+
+    def get_unique_categories(self):
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                SELECT DISTINCT category FROM products
+                WHERE category IS NOT NULL
+            """)
+            rows = cur.fetchall()
+            return [row[0] for row in rows]

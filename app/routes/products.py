@@ -48,3 +48,22 @@ def get_user_search_history():
     user_id = get_jwt_identity()
     history = product_service.get_search_history(user_id)
     return jsonify(history)
+
+@product_routes.route('/categories', methods=['GET'])
+def fetch_unique_categories():
+    categories = product_service.get_unique_categories()
+    return jsonify(categories), 200
+
+@product_routes.route('/autocomplete', methods=['GET'])
+def autocomplete():
+    term = request.args.get('term') or request.args.get('q') or ''
+    term = term.strip()
+    if len(term) < 1:
+        return jsonify([]), 200
+
+    products = product_service.search_products(term)
+    suggestions = [
+        {'id': p['id'], 'name': p['name'], 'media': p['media'], 'description':p['description']}
+        for p in products
+    ]
+    return jsonify(suggestions), 200
