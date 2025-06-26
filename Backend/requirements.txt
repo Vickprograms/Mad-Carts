@@ -1,0 +1,6 @@
+psycopg2
+uuid
+dotenv
+jsonify
+request
+flask
