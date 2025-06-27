@@ -10,6 +10,7 @@ def get_all_products_controller():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 def get_product_by_id_controller(product_id):
     try:
         product = product_service.get_product_by_id(product_id)
@@ -22,10 +23,24 @@ def get_product_by_id_controller(product_id):
 def create_product_controller():
     try:
         data = request.form.to_dict()
-        image = request.files.get('image')  # 'image' is the field name in the form
+        image = request.files.get('image')
 
-        product_id = product_service.create_product(data, image)
+        
+        required = ['name', 'price', 'category', 'description']
+        missing = [field for field in required if field not in data]
+        if missing:
+            return jsonify({'error': f'Missing fields: {", ".join(missing)}'}), 400
+
+        
+        if image:
+            filename = secure_filename(image.filename)
+            upload_path = os.path.join(current_app.root_path, 'static/uploads', filename)
+            image.save(upload_path)
+            data['media'] = filename  # Add filename to DB-ready data
+
+        product_id = product_service.create_product(data)
         return jsonify({'message': 'Product created', 'product_id': product_id}), 201
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -35,19 +50,35 @@ def update_product_controller(product_id):
         data = request.form.to_dict()
         image = request.files.get('image')
 
-        product_service.update_product(product_id, data, image)
+        if image:
+            
+            filename = secure_filename(image.filename)
+            upload_path = os.path.join(current_app.root_path, 'static/uploads', filename)
+            image.save(upload_path)
+            data['media'] = filename 
+
+        product_service.update_product(product_id, data)
         return jsonify({'message': 'Product updated'}), 200
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 def partial_update_product_controller(product_id):
     try:
         data = request.form.to_dict()
         image = request.files.get('image')
 
-        product_service.partial_update_product(product_id, data, image)
+        
+        if image:
+            filename = secure_filename(image.filename)
+            upload_path = os.path.join(current_app.root_path, 'static/uploads', filename)
+            image.save(upload_path)
+            data['media'] = filename  
+
+        
+        product_service.partial_update_product(product_id, data)
         return jsonify({'message': 'Product partially updated'}), 200
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

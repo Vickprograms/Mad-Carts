@@ -14,7 +14,7 @@ def create_product():
     result = product_service.create_product(data, image)
     return jsonify(result), 201
 
-@product_bp.route('', methods=['GET'])
+@product_bp.route('/products', methods=['GET'])
 def get_all_products():
     products = product_service.get_all_products()
     return jsonify(products)
@@ -56,7 +56,7 @@ def get_products_by_category():
     products = product_service.get_products_by_category(category)
     return jsonify(products)
 
-@product_bp.route('/search', methods=['GET'])
+@product_bp.route('/autocomplete', methods=['GET'])
 def search_products():
     term = request.args.get('term', '')
     results = product_service.search_products(term)
@@ -102,5 +102,5 @@ def get_user_search_history():
 
 @product_bp.route('/categories', methods=['GET'])
 def fetch_unique_categories():
-    categories = product_service.get_unique_categories()
+    categories = product_service.get_unique_category_names()
     return jsonify(categories), 200

@@ -192,8 +192,8 @@ class ProductService:
             rows = cur.fetchall()
             return [{'term': row[0], 'time': row[1].isoformat()} for row in rows]
     
-    def get_unique_categories(self):
+    def get_unique_category_names(self):
         with self.conn.cursor() as cur:
-            cur.execute("SELECT DISTINCT category FROM products WHERE category IS NOT NULL")
+            cur.execute("SELECT DISTINCT category FROM products")
             rows = cur.fetchall()
-            return [row[0] for row in rows if row[0]]  
+            return [row[0] for row in rows]
