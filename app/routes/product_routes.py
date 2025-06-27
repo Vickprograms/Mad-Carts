@@ -48,8 +48,11 @@ def delete_product(product_id):
     product_service.delete_product(product_id)
     return jsonify({'message': 'Product deleted'})
 
-@product_bp.route('/category/<category>', methods=['GET'])
-def get_products_by_category(category):
+@product_bp.route('/category', methods=['GET'])
+def get_products_by_category():
+    category = request.args.get('q')
+    if not category:
+        return {"error": "Missing category"}, 400
     products = product_service.get_products_by_category(category)
     return jsonify(products)
 
@@ -95,3 +98,9 @@ def get_user_search_history():
     user_id = get_jwt_identity()
     history = product_service.get_search_history(user_id)
     return jsonify(history)
+
+
+@product_bp.route('/categories', methods=['GET'])
+def fetch_unique_categories():
+    categories = product_service.get_unique_categories()
+    return jsonify(categories), 200

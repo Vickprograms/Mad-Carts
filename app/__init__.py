@@ -9,6 +9,7 @@ from app.routes.delivery_routes import delivery_bp
 from app.routes.user_routes import user_bp
 from app.routes.product_routes import product_bp
 from app.routes.search_history_routes import search_history_bp
+from app.routes.visit_routes import visit_bp
 
 def create_app():
     app = Flask(__name__)
@@ -28,5 +29,5 @@ def create_app():
     app.register_blueprint(delivery_bp, url_prefix="/api/deliveries")
     app.register_blueprint(user_bp, url_prefix="/api/users")
     app.register_blueprint(search_history_bp, url_prefix="/api/search")
-
+    app.register_blueprint(visit_bp, url_prefix="/api/visit")
     return app
