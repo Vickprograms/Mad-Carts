@@ -29,7 +29,7 @@ def get_cart(id):
     cart = Cart.query.get_or_404(id)
     return cart_schema.dump(cart), 200
 
-@cart_bp.route('', methods=['POST'])
+@cart_bp.route('/carts', methods=['POST'])
 @jwt_required()
 def create_cart():
     user_id = get_jwt_identity()
