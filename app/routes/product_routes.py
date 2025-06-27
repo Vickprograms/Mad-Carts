@@ -1,28 +1,12 @@
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import Blueprint, jsonify, request
+from app.models.product import Product
 from app.services.product_service import ProductService
 
-product_bp = Blueprint('product_routes', __name__)
+product_bp = Blueprint('product_routes', __name__, url_prefix='/api/products')
 product_service = ProductService()
 
-@product_bp.route('/products', methods=['GET'])
-def get_all_products():
-    products = product_service.get_all_products()
-    return jsonify(products)
-
-@product_bp.route('/products/category/<category>', methods=['GET'])
-def get_products_by_category(category):
-    products = product_service.get_products_by_category(category)
-    return jsonify(products)
-
-@product_bp.route('/products/<product_id>', methods=['GET'])
-def get_product_by_id(product_id):
-    product = product_service.get_product_by_id(product_id)
-    if product:
-        return jsonify(product)
-    return jsonify({'error': 'Product not found'}), 404
-
-@product_bp.route('/products', methods=['POST'])
+@product_bp.route('', methods=['POST'])
 @jwt_required()
 def create_product():
     data = request.form.to_dict()
@@ -30,41 +14,58 @@ def create_product():
     result = product_service.create_product(data, image)
     return jsonify(result), 201
 
-@product_bp.route('/products/<product_id>', methods=['PUT'])
+@product_bp.route('', methods=['GET'])
+def get_all_products():
+    products = product_service.get_all_products()
+    return jsonify(products)
+
+@product_bp.route('/<product_id>', methods=['GET'])
+def get_product_by_id(product_id):
+    product = product_service.get_product_by_id(product_id)
+    if product:
+        return jsonify(product)
+    return jsonify({'error': 'Product not found'}), 404
+
+@product_bp.route('/<product_id>', methods=['PUT'])
 @jwt_required()
 def update_product(product_id):
     data = request.form.to_dict()
     image = request.files.get('image')
-    result = product_service.update_product(product_id, data, image)
+    product_service.update_product(product_id, data, image)
     return jsonify({'message': 'Product updated'})
 
-@product_bp.route('/products/<product_id>', methods=['PATCH'])
+@product_bp.route('/<product_id>', methods=['PATCH'])
 @jwt_required()
 def partial_update_product(product_id):
     data = request.form.to_dict()
     image = request.files.get('image')
-    result = product_service.partial_update_product(product_id, data, image)
+    product_service.partial_update_product(product_id, data, image)
     return jsonify({'message': 'Product partially updated'})
 
-@product_bp.route('/products/<product_id>', methods=['DELETE'])
+@product_bp.route('/<product_id>', methods=['DELETE'])
 @jwt_required()
 def delete_product(product_id):
-    result = product_service.delete_product(product_id)
+    product_service.delete_product(product_id)
     return jsonify({'message': 'Product deleted'})
 
-@product_bp.route('/products/search', methods=['GET'])
+@product_bp.route('/category/<category>', methods=['GET'])
+def get_products_by_category(category):
+    products = product_service.get_products_by_category(category)
+    return jsonify(products)
+
+@product_bp.route('/search', methods=['GET'])
 def search_products():
     term = request.args.get('term', '')
     results = product_service.search_products(term)
     return jsonify(results)
 
-@product_bp.route('/products/filter', methods=['GET'])
+@product_bp.route('/filter', methods=['GET'])
 def filter_products():
     filters = request.args.to_dict()
     filtered = product_service.filter_products(filters)
     return jsonify(filtered)
 
-@product_bp.route('/products/sort', methods=['GET'])
+@product_bp.route('/sort', methods=['GET'])
 def sort_products():
     sort_by = request.args.get('sort_by', 'name')
     direction = request.args.get('direction', 'asc')

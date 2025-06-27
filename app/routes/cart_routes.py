@@ -1,44 +1,51 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
 from app.models.cart import Cart, CartItem, CartSchema, CartItemSchema
 
-cart_bp = Blueprint('cart_bp', __name__)
+cart_bp = Blueprint('cart_bp', __name__, url_prefix='/api/cart')
 
 cart_schema = CartSchema()
 carts_schema = CartSchema(many=True)
 cart_item_schema = CartItemSchema()
 cart_items_schema = CartItemSchema(many=True)
 
+@cart_bp.route('', methods=['GET'])
+@jwt_required()
+def get_user_cart():
+    user_id = get_jwt_identity()
+    cart = Cart.query.filter_by(user_id=user_id).first()
+    if not cart:
+        return jsonify({"message": "Cart not found for user."}), 404
+    return cart_schema.dump(cart), 200
 
-@cart_bp.route('/carts', methods=['GET'])
-def get_carts():
+@cart_bp.route('/admin', methods=['GET'])
+def get_all_carts():
     carts = Cart.query.all()
     return carts_schema.dump(carts), 200
 
-@cart_bp.route('/carts/<int:id>', methods=['GET'])
+@cart_bp.route('/<int:id>', methods=['GET'])
 def get_cart(id):
     cart = Cart.query.get_or_404(id)
     return cart_schema.dump(cart), 200
 
-
-@cart_bp.route('/carts', methods=['POST'])
+@cart_bp.route('', methods=['POST'])
+@jwt_required()
 def create_cart():
+    user_id = get_jwt_identity()
     data = request.get_json()
-    
-    
     errors = cart_schema.validate(data)
     if errors:
         return jsonify(errors), 400
 
-    cart = Cart(user_id=data['user_id'])
+    cart = Cart(user_id=user_id)
 
-    
     cart_items_data = data.get('cart_items', [])
     for item_data in cart_items_data:
         item_errors = cart_item_schema.validate(item_data)
         if item_errors:
             return jsonify(item_errors), 400
-        
+
         item = CartItem(
             product_id=item_data['product_id'],
             quantity=item_data['quantity'],
@@ -50,8 +57,8 @@ def create_cart():
     db.session.commit()
 
     return cart_schema.dump(cart), 201
-    
-@cart_bp.route('/carts/<int:id>', methods=['PATCH'])
+
+@cart_bp.route('/<int:id>', methods=['PATCH'])
 def update_cart(id):
     cart = Cart.query.get_or_404(id)
     data = request.get_json()
@@ -62,7 +69,7 @@ def update_cart(id):
     db.session.commit()
     return cart_schema.dump(cart), 200
 
-@cart_bp.route('/carts/<int:id>', methods=['DELETE'])
+@cart_bp.route('/<int:id>', methods=['DELETE'])
 def delete_cart(id):
     cart = Cart.query.get_or_404(id)
     db.session.delete(cart)

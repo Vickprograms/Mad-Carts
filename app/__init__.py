@@ -1,32 +1,32 @@
-# app/__init__.py
 from flask import Flask
-from config import Config
-from extensions import db, migrate, jwt
 from flask_cors import CORS
-from dotenv import load_dotenv
-import os
+from extensions import db, migrate, jwt
 
-load_dotenv()
+from app.routes.auth_routes import auth_bp
+from app.routes.cart_routes import cart_bp
+from app.routes.order_routes import order_bp
+from app.routes.delivery_routes import delivery_bp
+from app.routes.user_routes import user_bp
+from app.routes.product_routes import product_bp
+from app.routes.search_history_routes import search_history_bp
 
 def create_app():
     app = Flask(__name__)
+
+    from config import Config
     app.config.from_object(Config)
 
-    # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
     CORS(app)
 
-    # Register Blueprints
-    from app.routes import (
-        auth_bp, user_bp, product_bp, cart_bp, order_bp, delivery_bp
-    )
-    app.register_blueprint(auth_bp, url_prefix="/auth")
-    app.register_blueprint(user_bp, url_prefix="/users")
-    app.register_blueprint(product_bp)
-    app.register_blueprint(cart_bp)
-    app.register_blueprint(order_bp)
-    app.register_blueprint(delivery_bp)
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(product_bp, url_prefix="/api/products")
+    app.register_blueprint(cart_bp, url_prefix="/api/cart")
+    app.register_blueprint(order_bp, url_prefix="/api/orders")
+    app.register_blueprint(delivery_bp, url_prefix="/api/deliveries")
+    app.register_blueprint(user_bp, url_prefix="/api/users")
+    app.register_blueprint(search_history_bp, url_prefix="/api/search")
 
     return app
