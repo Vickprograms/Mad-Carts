@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from models.delivery import Delivery
+from app.models.delivery import Delivery
 from extensions import db
 from flask_jwt_extended import jwt_required
 import datetime

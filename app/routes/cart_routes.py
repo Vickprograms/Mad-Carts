@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from extensions import db
-from models.cart import Cart, CartItem, CartSchema, CartItemSchema
+from app.models.cart import Cart, CartItem, CartSchema, CartItemSchema
 
 cart_bp = Blueprint('cart_bp', __name__)
 

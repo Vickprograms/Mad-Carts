@@ -1,6 +1,6 @@
 from flask import Blueprint
 from flask_jwt_extended import jwt_required
-from controllers.delivery_controller import DeliveryController
+from app.controllers.delivery_controller import DeliveryController
 
 delivery_bp = Blueprint("delivery", __name__, url_prefix="/deliveries")
 

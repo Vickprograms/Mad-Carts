@@ -1,5 +1,3 @@
-# models/recent_visits.py
-
 import uuid
 from extensions import db
 from sqlalchemy.dialects.postgresql import UUID

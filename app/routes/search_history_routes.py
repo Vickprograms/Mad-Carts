@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.services.search_history_service import SearchHistoryService
-from app.db import get_db_connection
+from app.utils.db import get_db_connection
 
 search_history_bp = Blueprint('search_history', __name__)
 conn = get_db_connection()

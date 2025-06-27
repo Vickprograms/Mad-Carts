@@ -1,6 +1,6 @@
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
-from models.cart import Cart
-from models.order import Order
+from app.models.cart import Cart
+from app.models.order import Order
 from extensions import db
 from marshmallow import EXCLUDE
 

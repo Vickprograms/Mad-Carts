@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
-from models.order import Order, OrderItem
-from models.schemas import OrderSchema
+from app.models.order import Order, OrderItem
+from app.models.schemas import OrderSchema
 from extensions import db
 
 order_bp = Blueprint('order_bp', __name__)

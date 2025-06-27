@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from models.user import User
+from app.models.user import User
 from extensions import db
 from flask_jwt_extended import create_access_token
 
