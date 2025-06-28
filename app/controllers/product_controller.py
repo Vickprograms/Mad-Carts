@@ -25,23 +25,40 @@ def create_product_controller():
         data = request.form.to_dict()
         image = request.files.get('image')
 
-        
-        required = ['name', 'price', 'category', 'description']
-        missing = [field for field in required if field not in data]
+        # Required fields
+        required = ['name', 'price', 'category', 'description', 'quantity', 'size', 'brand']
+        missing = [field for field in required if not data.get(field)]
         if missing:
-            return jsonify({'error': f'Missing fields: {", ".join(missing)}'}), 400
+            return jsonify({'error': f'Missing fields: {", ".join(missing)}'}), 422
 
-        
+        # 🧹 Sanitize + Cast
+        try:
+            data['price'] = float(data['price'])
+            data['quantity'] = int(data['quantity'])
+        except ValueError:
+            return jsonify({'error': 'Price must be a number and quantity must be an integer'}), 422
+
+        # Image upload
+        media_path = None
         if image:
             filename = secure_filename(image.filename)
-            upload_path = os.path.join(current_app.root_path, 'static/uploads', filename)
+            upload_dir = os.path.join(current_app.root_path, 'static/uploads')
+            os.makedirs(upload_dir, exist_ok=True)
+            upload_path = os.path.join(upload_dir, filename)
             image.save(upload_path)
-            data['media'] = filename  # Add filename to DB-ready data
+            media_path = f'static/uploads/{filename}'
 
-        product_id = product_service.create_product(data)
+        # Log for debug
+        print("📦 Final sanitized form data:", data)
+        print("🖼️ Media path:", media_path)
+
+        # Call the service
+        product_id = product_service.create_product(data, media_path)
+
         return jsonify({'message': 'Product created', 'product_id': product_id}), 201
 
     except Exception as e:
+        print("❌ Error during product creation:", str(e))
         return jsonify({'error': str(e)}), 500
 
 

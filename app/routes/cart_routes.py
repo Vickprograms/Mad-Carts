@@ -1,77 +1,159 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from marshmallow import ValidationError
 from extensions import db
 from app.models.cart import Cart, CartItem, CartSchema, CartItemSchema
 
-cart_bp = Blueprint('cart_bp', __name__, url_prefix='/api/cart')
-
+cart_bp = Blueprint("cart_bp", __name__)
 cart_schema = CartSchema()
-carts_schema = CartSchema(many=True)
 cart_item_schema = CartItemSchema()
-cart_items_schema = CartItemSchema(many=True)
 
-@cart_bp.route('', methods=['GET'])
+# 1. Get current user's cart
+@cart_bp.route("/", methods=["GET"])
 @jwt_required()
-def get_user_cart():
+def get_my_cart():
     user_id = get_jwt_identity()
     cart = Cart.query.filter_by(user_id=user_id).first()
     if not cart:
-        return jsonify({"message": "Cart not found for user."}), 404
+        return jsonify({"message": "Cart is empty"}), 200
     return cart_schema.dump(cart), 200
 
-@cart_bp.route('/admin', methods=['GET'])
-def get_all_carts():
-    carts = Cart.query.all()
-    return carts_schema.dump(carts), 200
-
-@cart_bp.route('/<int:id>', methods=['GET'])
-def get_cart(id):
-    cart = Cart.query.get_or_404(id)
-    return cart_schema.dump(cart), 200
-
-@cart_bp.route('/carts', methods=['POST'])
+# 2. Create a new cart
+@cart_bp.route("/", methods=["POST"])
 @jwt_required()
 def create_cart():
     user_id = get_jwt_identity()
-    data = request.get_json()
-    errors = cart_schema.validate(data)
-    if errors:
-        return jsonify(errors), 400
+    existing = Cart.query.filter_by(user_id=user_id).first()
+    if existing:
+        return jsonify({"error": "Cart already exists"}), 400
 
     cart = Cart(user_id=user_id)
-
-    cart_items_data = data.get('cart_items', [])
-    for item_data in cart_items_data:
-        item_errors = cart_item_schema.validate(item_data)
-        if item_errors:
-            return jsonify(item_errors), 400
-
-        item = CartItem(
-            product_id=item_data['product_id'],
-            quantity=item_data['quantity'],
-            price=item_data['price']
-        )
-        cart.cart_items.append(item)
-
     db.session.add(cart)
     db.session.commit()
-
     return cart_schema.dump(cart), 201
 
-@cart_bp.route('/<int:id>', methods=['PATCH'])
-def update_cart(id):
-    cart = Cart.query.get_or_404(id)
-    data = request.get_json()
+# 3. Add an item to the user's cart
+@cart_bp.route("/add-item", methods=["POST"])
+@jwt_required()
+def add_item():
+    user_id = get_jwt_identity()
+    data = request.get_json(force=True)
 
-    if 'user_id' in data:
-        cart.user_id = data['user_id']
+    print("\U0001F7E1 Received data:", data)  # Debug print
+
+    try:
+        validated_item = cart_item_schema.load(data)
+        print("\u2705 Validated item:", validated_item)
+    except ValidationError as ve:
+        print("\u274C Validation error:", ve.messages)
+        return jsonify({"error": ve.messages}), 422
+
+    product_id = validated_item["product_id"]
+    price = validated_item["price"]
+    quantity = validated_item["quantity"]
+
+    cart = Cart.query.filter_by(user_id=user_id).first()
+    if not cart:
+        cart = Cart(user_id=user_id)
+        db.session.add(cart)
+        db.session.flush()
+
+    item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+    if item:
+        item.quantity += quantity
+    else:
+        item = CartItem(
+            cart_id=cart.id,
+            product_id=product_id,
+            price=price,
+            quantity=quantity
+        )
+        db.session.add(item)
 
     db.session.commit()
-    return cart_schema.dump(cart), 200
+    return jsonify({"message": "Item added"}), 200
 
-@cart_bp.route('/<int:id>', methods=['DELETE'])
-def delete_cart(id):
-    cart = Cart.query.get_or_404(id)
+# 4. Update quantity of a specific item
+@cart_bp.route("/update-item", methods=["PATCH"])
+@jwt_required()
+def update_item():
+    user_id = get_jwt_identity()
+    data = request.get_json()
+    product_id = data.get("product_id")
+    quantity = data.get("quantity")
+
+    cart = Cart.query.filter_by(user_id=user_id).first()
+    item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+    if not item:
+        return jsonify({"error": "Item not found"}), 404
+
+    item.quantity = quantity
+    db.session.commit()
+    return jsonify({"message": "Item updated"}), 200
+
+# 5. Remove item from cart
+@cart_bp.route("/remove-item", methods=["DELETE"])
+@jwt_required()
+def remove_item():
+    user_id = get_jwt_identity()
+    product_id = request.args.get("product_id")
+
+    cart = Cart.query.filter_by(user_id=user_id).first()
+    item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+    if not item:
+        return jsonify({"error": "Item not found"}), 404
+
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({"message": "Item removed"}), 200
+
+# 6. Delete whole cart
+@cart_bp.route("/", methods=["DELETE"])
+@jwt_required()
+def delete_cart():
+    user_id = get_jwt_identity()
+    cart = Cart.query.filter_by(user_id=user_id).first()
+    if not cart:
+        return jsonify({"error": "No cart to delete"}), 404
+
     db.session.delete(cart)
     db.session.commit()
-    return jsonify({"message": f"Cart {id} deleted."}), 204
+    return jsonify({"message": "Cart deleted"}), 204
+
+
+
+@cart_bp.route("/test-add-item", methods=["POST"])
+def test_add_item():
+    test_user_id = "some-valid-uuid-user-id"  # use a real user UUID from your DB
+    test_data = {
+        "product_id": "2ba575bd-a755-44b7-8d6f-37177eb93558",
+        "price": 2000,
+        "quantity": 1
+    }
+
+    from marshmallow import ValidationError
+    try:
+        validated_item = cart_item_schema.load(test_data)
+    except ValidationError as ve:
+        return jsonify({"error": ve.messages}), 422
+
+    cart = Cart.query.filter_by(user_id=test_user_id).first()
+    if not cart:
+        cart = Cart(user_id=test_user_id)
+        db.session.add(cart)
+        db.session.flush()
+
+    item = CartItem.query.filter_by(cart_id=cart.id, product_id=validated_item["product_id"]).first()
+    if item:
+        item.quantity += validated_item["quantity"]
+    else:
+        item = CartItem(
+            cart_id=cart.id,
+            product_id=validated_item["product_id"],
+            price=validated_item["price"],
+            quantity=validated_item["quantity"]
+        )
+        db.session.add(item)
+
+    db.session.commit()
+    return jsonify({"message": "✅ Test item added successfully"}), 200

@@ -32,22 +32,26 @@ class ProductService:
             return filepath
         return None
 
-    def create_product(self, data, image=None):
-        media_path = self._save_image(image)
-
+    def create_product(self, data, media_path=None):
         with self.conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO products (id, name, category, price, quantity, size, media, description, brand)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO products (
+                    id, name, category, price, quantity, size, media, description, brand
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
             """, (
-                str(uuid.uuid4()), data['name'], data['category'],
-                data['price'], data['quantity'], data['size'],
-                media_path, data['description'], data['brand']
+                str(uuid.uuid4()),
+                data.get('name'),
+                data.get('category'),
+                float(data.get('price')),
+                int(data.get('quantity', 0)), 
+                media_path,
+                data.get('description'),
+                data.get('brand', '')
             ))
             product_id = cur.fetchone()[0]
             self.conn.commit()
-            return {'message': 'Product created', 'id': product_id}
+            return product_id
 
     def get_all_products(self):
         with self.conn.cursor() as cur:

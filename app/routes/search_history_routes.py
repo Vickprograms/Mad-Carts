@@ -8,18 +8,25 @@ conn = get_db_connection()
 search_service = SearchHistoryService(conn)
 
 
-@search_history_bp.route('/search-history', methods=['POST'])
+@search_history_bp.route('/create', methods=['POST'])
 @jwt_required()
 def create_search():
-    data = request.get_json()
-    user_id = get_jwt_identity()
-    search_term = data.get('search_term')
+    try:
+        data = request.get_json()
+        print("Incoming data:", data)
 
-    if not search_term:
-        return jsonify({'error': 'search_term is required'}), 400
+        search_term = data.get('search_term')
+        user_id = get_jwt_identity()
 
-    response, status = search_service.create_search_history(user_id, search_term)
-    return jsonify(response), status
+        if not search_term:
+            return jsonify({'error': 'search_term is required'}), 400
+
+        # Call the DB layer function
+        response, status = search_service.create_search_history(user_id, search_term)
+        return jsonify(response), status
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @search_history_bp.route('/search-history', methods=['GET'])

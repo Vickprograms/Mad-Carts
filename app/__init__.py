@@ -10,17 +10,21 @@ from app.routes.user_routes import user_bp
 from app.routes.product_routes import product_bp
 from app.routes.search_history_routes import search_history_bp
 from app.routes.visit_routes import visit_bp
+import os
 
 def create_app():
     app = Flask(__name__)
 
     from config import Config
     app.config.from_object(Config)
-
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 
+    app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static/uploads')
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    CORS(app, resources={r"/api/*": {"origins": "http://127.0.0.1:5173"}}, supports_credentials=True)
+    CORS(app, origins=["http://127.0.0.1:5173", "http://localhost:5173"], supports_credentials=True)
+
+
 
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")

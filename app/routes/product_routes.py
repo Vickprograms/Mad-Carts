@@ -3,17 +3,15 @@ from flask import Blueprint, jsonify, request
 from app.models.product import Product
 from app.services.product_service import ProductService
 
-product_bp = Blueprint('product_routes', __name__, url_prefix='/api/products')
+product_bp = Blueprint('product_routes', __name__)
+
 product_service = ProductService()
 
-@product_bp.route('', methods=['POST'])
+@product_bp.route('/create', methods=['POST'])
 @jwt_required()
 def create_product():
-    data = request.form.to_dict()
-    image = request.files.get('image')
-    result = product_service.create_product(data, image)
-    return jsonify(result), 201
-
+    return create_product_controller()
+    
 @product_bp.route('/products', methods=['GET'])
 def get_all_products():
     products = product_service.get_all_products()

@@ -1,11 +1,12 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Float, DateTime, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from extensions import db
 from marshmallow import Schema, fields, validate, validates_schema, ValidationError
 
+ 
 class Cart(db.Model):
     __tablename__ = 'carts'
 
@@ -24,7 +25,7 @@ class CartItem(db.Model):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     cart_id = Column(UUID(as_uuid=True), ForeignKey('carts.id'), nullable=False)
     product_id = Column(UUID(as_uuid=True), nullable=False)
-    quantity = Column(db.Integer, nullable=False)
+    quantity = Column(Integer, nullable=False)
     price = Column(Float, nullable=False)
 
     cart = relationship("Cart", back_populates="cart_items")
