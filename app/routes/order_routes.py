@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
-from app.models.order import Order, OrderItem
-from app.models.schemas import OrderSchema
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.models.order import Order, OrderItem, OrderSchema
 from extensions import db
 
 order_bp = Blueprint('order_bp', __name__)
@@ -8,33 +8,42 @@ order_schema = OrderSchema()
 orders_schema = OrderSchema(many=True)
 
 
-@order_bp.route('/orders', methods=['GET'])
+@order_bp.route('/', methods=['GET'])
+@jwt_required()
 def get_orders():
-    orders = Order.query.all()
-    return jsonify(orders_schema.dump(orders)), 200
+    user_id = get_jwt_identity()
+    orders = Order.query.filter_by(user_id=user_id).all()
+    result = orders_schema.dump(orders)
+    return jsonify(result), 200
 
 
-@order_bp.route('/orders/single', methods=['POST'])  #  custom route for single order by ID in body
+@order_bp.route('/single', methods=['POST'])
+@jwt_required()
 def get_order():
+    user_id = get_jwt_identity()
     data = request.get_json()
     order_id = data.get('id')
 
     if not order_id:
         return jsonify({"error": "Missing order ID"}), 400
 
-    order = Order.query.get_or_404(order_id)
+    order = Order.query.filter_by(id=order_id, user_id=user_id).first()
+    if not order:
+        return jsonify({"error": "Order not found"}), 404
+    
     return jsonify(order_schema.dump(order)), 200
 
 
-@order_bp.route('/orders', methods=['POST'])
+@order_bp.route('/', methods=['POST'])
+@jwt_required()
 def create_order():
+    user_id = get_jwt_identity()
     data = request.get_json()
 
-    user_id = data.get('user_id')
     total_amount = data.get('total_amount')
     order_items_data = data.get('order_items', [])
 
-    if not user_id or not total_amount or not order_items_data:
+    if not total_amount or not order_items_data:
         return jsonify({"error": "Missing required fields"}), 400
 
     order = Order(user_id=user_id, total_amount=total_amount)
@@ -55,15 +64,19 @@ def create_order():
     return jsonify(order_schema.dump(order)), 201
 
 
-@order_bp.route('/orders/update', methods=['PATCH'])  #  update using body UUID
+@order_bp.route('/update', methods=['PATCH'])
+@jwt_required()
 def update_order():
+    user_id = get_jwt_identity()
     data = request.get_json()
     order_id = data.get('id')
 
     if not order_id:
         return jsonify({"error": "Missing order ID"}), 400
 
-    order = Order.query.get_or_404(order_id)
+    order = Order.query.filter_by(id=order_id, user_id=user_id).first()
+    if not order:
+        return jsonify({"error": "Order not found"}), 404
 
     for key, value in data.items():
         if key != "id":
@@ -73,15 +86,20 @@ def update_order():
     return jsonify(order_schema.dump(order)), 200
 
 
-@order_bp.route('/orders/delete', methods=['DELETE'])  #  delete using body UUID
+@order_bp.route('/delete', methods=['DELETE'])
+@jwt_required()
 def delete_order():
+    user_id = get_jwt_identity()
     data = request.get_json()
     order_id = data.get('id')
 
     if not order_id:
         return jsonify({"error": "Missing order ID"}), 400
 
-    order = Order.query.get_or_404(order_id)
+    order = Order.query.filter_by(id=order_id, user_id=user_id).first()
+    if not order:
+        return jsonify({"error": "Order not found"}), 404
+        
     db.session.delete(order)
     db.session.commit()
     return jsonify({"message": "Order deleted"}), 204

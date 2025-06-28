@@ -39,13 +39,9 @@ def add_item():
     user_id = get_jwt_identity()
     data = request.get_json(force=True)
 
-    print("\U0001F7E1 Received data:", data)  # Debug print
-
     try:
         validated_item = cart_item_schema.load(data)
-        print("\u2705 Validated item:", validated_item)
     except ValidationError as ve:
-        print("\u274C Validation error:", ve.messages)
         return jsonify({"error": ve.messages}), 422
 
     product_id = validated_item["product_id"]
@@ -73,7 +69,7 @@ def add_item():
     db.session.commit()
     return jsonify({"message": "Item added"}), 200
 
-# 4. Update quantity of a specific item
+# 4. Update quantity of an item
 @cart_bp.route("/update-item", methods=["PATCH"])
 @jwt_required()
 def update_item():
@@ -99,6 +95,9 @@ def remove_item():
     product_id = request.args.get("product_id")
 
     cart = Cart.query.filter_by(user_id=user_id).first()
+    if not cart:
+        return jsonify({"error": "Cart not found"}), 404
+
     item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
     if not item:
         return jsonify({"error": "Item not found"}), 404
@@ -120,11 +119,9 @@ def delete_cart():
     db.session.commit()
     return jsonify({"message": "Cart deleted"}), 204
 
-
-
 @cart_bp.route("/test-add-item", methods=["POST"])
 def test_add_item():
-    test_user_id = "some-valid-uuid-user-id"  # use a real user UUID from your DB
+    test_user_id = "some-valid-uuid-user-id"
     test_data = {
         "product_id": "2ba575bd-a755-44b7-8d6f-37177eb93558",
         "price": 2000,
@@ -156,4 +153,4 @@ def test_add_item():
         db.session.add(item)
 
     db.session.commit()
-    return jsonify({"message": "✅ Test item added successfully"}), 200
+    return jsonify({"message": "Test item added successfully"}), 200

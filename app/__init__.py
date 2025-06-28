@@ -24,9 +24,6 @@ def create_app():
     jwt.init_app(app)
     CORS(app, origins=["http://127.0.0.1:5173", "http://localhost:5173"], supports_credentials=True)
 
-
-
-
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(product_bp, url_prefix="/api/products")
     app.register_blueprint(cart_bp, url_prefix="/api/cart")
