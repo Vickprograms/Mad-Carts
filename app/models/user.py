@@ -13,7 +13,7 @@ class User(db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.Text, nullable=False)
     is_driver = db.Column(db.Boolean, default=False)
-    role = db.Column(String(20), default='customer')
+    role = db.Column(db.String, nullable=False, default='customer')
 
 
     def set_password(self, raw_password):
