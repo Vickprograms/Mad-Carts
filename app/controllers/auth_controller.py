@@ -9,7 +9,13 @@ class AuthController:
     def register():
         data = request.get_json()
 
-        # Validate uniqueness
+        # Ensure required fields are present
+        required_fields = ["email", "username", "password"]
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({"error": f"{field.capitalize()} is required"}), 400
+
+        # Check if email or username already exists
         if User.query.filter_by(email=data.get("email")).first():
             return jsonify({"error": "Email already exists"}), 400
         if User.query.filter_by(username=data.get("username")).first():
@@ -20,7 +26,7 @@ class AuthController:
         if role not in ["customer", "driver", "admin"]:
             return jsonify({"error": "Invalid role"}), 400
 
-        # Create user
+        # Create new user
         user = User(
             email=data["email"],
             username=data["username"],
@@ -31,7 +37,7 @@ class AuthController:
         db.session.add(user)
         db.session.commit()
 
-        # Generate token immediately after registration
+        # Generate JWT with full identity including role
         access_token = create_access_token(identity={
             "id": str(user.id),
             "username": user.username,
@@ -48,12 +54,12 @@ class AuthController:
     def login():
         data = request.get_json()
 
-        # Find user
+        # Check credentials
         user = User.query.filter_by(email=data.get("email")).first()
         if not user or not user.check_password(data.get("password")):
             return jsonify({"error": "Invalid credentials"}), 401
 
-        # Create token
+        # Generate JWT with user info
         access_token = create_access_token(identity={
             "id": str(user.id),
             "username": user.username,
