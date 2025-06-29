@@ -37,7 +37,11 @@ def create_cart():
 @jwt_required()
 def add_item():
     user_id = get_jwt_identity()
+    print(f" DEBUG: User ID from token: {user_id}")
+    print(f" DEBUG: User ID type: {type(user_id)}")
+    
     data = request.get_json(force=True)
+    print(f" DEBUG: Request data: {data}")
 
     try:
         validated_item = cart_item_schema.load(data)
@@ -49,14 +53,18 @@ def add_item():
     quantity = validated_item["quantity"]
 
     cart = Cart.query.filter_by(user_id=user_id).first()
+    print(f" DEBUG: Found cart: {cart}")
+    
     if not cart:
         cart = Cart(user_id=user_id)
         db.session.add(cart)
         db.session.flush()
+        print(f" DEBUG: Created new cart: {cart}")
 
     item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
     if item:
         item.quantity += quantity
+        print(f" DEBUG: Updated existing item quantity to: {item.quantity}")
     else:
         item = CartItem(
             cart_id=cart.id,
@@ -65,6 +73,7 @@ def add_item():
             quantity=quantity
         )
         db.session.add(item)
+        print(f" DEBUG: Created new cart item: {item}")
 
     db.session.commit()
     return jsonify({"message": "Item added"}), 200

@@ -44,7 +44,8 @@ class ProductService:
                 data.get('name'),
                 data.get('category'),
                 float(data.get('price')),
-                int(data.get('quantity', 0)), 
+                int(data.get('quantity', 0)),
+                data.get('size'),
                 media_path,
                 data.get('description'),
                 data.get('brand', '')
@@ -198,6 +199,6 @@ class ProductService:
     
     def get_unique_category_names(self):
         with self.conn.cursor() as cur:
-            cur.execute("SELECT DISTINCT category FROM products")
+            cur.execute("SELECT DISTINCT category FROM products ORDER BY category")
             rows = cur.fetchall()
             return [row[0] for row in rows]

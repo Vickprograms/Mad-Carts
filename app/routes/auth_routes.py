@@ -37,7 +37,6 @@ def register():
     db.session.add(new_user)
     db.session.commit()
 
-    # ✅ Use only user ID for identity
     access_token = create_access_token(identity=str(new_user.id))
 
     return jsonify({
@@ -64,7 +63,6 @@ def login():
     if not user or not check_password_hash(user.password, password):
         return jsonify({"error": "Invalid email or password"}), 401
 
-    # ✅ Use only user ID for identity
     access_token = create_access_token(identity=str(user.id))
 
     return jsonify({
@@ -79,13 +77,9 @@ def login():
     }), 200
 
 
-
-
 @auth_bp.route("/me", methods=["GET"])
 @jwt_required()
 def get_current_user_id():
-    """
-    Return the current logged-in user's ID from the JWT token.
-    """
+
     user_id = get_jwt_identity()
     return jsonify({"user_id": user_id}), 200

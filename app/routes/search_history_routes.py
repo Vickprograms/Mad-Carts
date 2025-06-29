@@ -21,7 +21,6 @@ def create_search():
         if not search_term:
             return jsonify({'error': 'search_term is required'}), 400
 
-        # Call the DB layer function
         response, status = search_service.create_search_history(user_id, search_term)
         return jsonify(response), status
 

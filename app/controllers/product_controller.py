@@ -1,5 +1,7 @@
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 from app.services.product_service import ProductService
+from werkzeug.utils import secure_filename
+import os
 
 product_service = ProductService()
 
@@ -22,23 +24,25 @@ def get_product_by_id_controller(product_id):
 
 def create_product_controller():
     try:
-        data = request.form.to_dict()
-        image = request.files.get('image')
+        if request.is_json:
+            data = request.get_json()
+            image = None
+        else:
+            data = request.form.to_dict()
+            image = request.files.get('image')
 
-        # Required fields
         required = ['name', 'price', 'category', 'description', 'quantity', 'size', 'brand']
         missing = [field for field in required if not data.get(field)]
+        
         if missing:
             return jsonify({'error': f'Missing fields: {", ".join(missing)}'}), 422
 
-        # 🧹 Sanitize + Cast
         try:
             data['price'] = float(data['price'])
             data['quantity'] = int(data['quantity'])
         except ValueError:
             return jsonify({'error': 'Price must be a number and quantity must be an integer'}), 422
 
-        # Image upload
         media_path = None
         if image:
             filename = secure_filename(image.filename)
@@ -48,35 +52,24 @@ def create_product_controller():
             image.save(upload_path)
             media_path = f'static/uploads/{filename}'
 
-        # Log for debug
-        print("📦 Final sanitized form data:", data)
-        print("🖼️ Media path:", media_path)
-
-        # Call the service
         product_id = product_service.create_product(data, media_path)
-
         return jsonify({'message': 'Product created', 'product_id': product_id}), 201
 
     except Exception as e:
-        print("❌ Error during product creation:", str(e))
         return jsonify({'error': str(e)}), 500
 
 
 def update_product_controller(product_id):
     try:
-        data = request.form.to_dict()
-        image = request.files.get('image')
+        if request.is_json:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+            if request.files.get('image'):
+                data['image'] = request.files.get('image')
 
-        if image:
-            
-            filename = secure_filename(image.filename)
-            upload_path = os.path.join(current_app.root_path, 'static/uploads', filename)
-            image.save(upload_path)
-            data['media'] = filename 
-
-        product_service.update_product(product_id, data)
-        return jsonify({'message': 'Product updated'}), 200
-
+        result = product_service.update_product(product_id, data)
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -102,8 +95,8 @@ def partial_update_product_controller(product_id):
 
 def delete_product_controller(product_id):
     try:
-        product_service.delete_product(product_id)
-        return jsonify({'message': 'Product deleted'}), 200
+        result = product_service.delete_product(product_id)
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

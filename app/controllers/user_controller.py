@@ -12,3 +12,10 @@ class UserController:
             return jsonify({"error": "User not found"}), 404
 
         return jsonify(user.serialize())
+    
+    @staticmethod
+    def is_admin():
+        """Check if current user is admin"""
+        user_id = get_jwt_identity()
+        user = User.query.get(user_id)
+        return user and user.role == 'admin'
