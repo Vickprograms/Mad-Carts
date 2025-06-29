@@ -8,7 +8,7 @@ from app.services.product_service import ProductService
 from app.controllers.product_controller import (
     create_product_controller,
     get_all_products_controller,
-    get_product_controller,
+    get_product_by_id_controller,
     update_product_controller,
     delete_product_controller
 )
@@ -50,7 +50,7 @@ def get_products():
 
 @product_bp.route('/<product_id>', methods=['GET'])
 def get_product(product_id):
-    return get_product_controller(product_id)
+    return get_product_by_id_controller(product_id)
 
 @product_bp.route('/<product_id>', methods=['PATCH', 'OPTIONS'])
 @jwt_required()

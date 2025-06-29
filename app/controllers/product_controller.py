@@ -125,7 +125,3 @@ def sort_products_controller():
         return jsonify(sorted_products), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-def get_unique_categories():
-    result = db.session.execute(db.select(Product.category).distinct())
-    return [row[0] for row in result if row[0] is not None]
