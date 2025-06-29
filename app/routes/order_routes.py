@@ -103,3 +103,13 @@ def delete_order():
     db.session.delete(order)
     db.session.commit()
     return jsonify({"message": "Order deleted"}), 204
+
+
+@order_bp.route('/<order_id>', methods=['GET'])
+@jwt_required()
+def get_order_by_id(order_id):
+    user_id = get_jwt_identity()
+    order = Order.query.filter_by(id=order_id, user_id=user_id).first()
+    if not order:
+        return jsonify({"error": "Order not found"}), 404
+    return jsonify(order_schema.dump(order)), 200

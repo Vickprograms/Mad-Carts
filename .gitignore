@@ -1,9 +1,31 @@
-# .gitignore
+# Python cache
 __pycache__/
 *.pyc
-venv/
+*.pyo
+*.pyd
+
+# Flask environment
+instance/
 .env
-.env
-__pycache__/
-*.pyc
+*.env
+
+# Virtual environment
 venv/
+ENV/
+env/
+.venv/
+
+# Database
+*.sqlite3
+*.db
+schema.sql
+
+# Migrations
+migrations/
+
+# VS Code
+.vscode/
+
+# OS crap
+.DS_Store
+Thumbs.db
