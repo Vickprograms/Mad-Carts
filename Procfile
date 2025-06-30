@@ -1,1 +1,1 @@
-web: python3.11 -m gunicorn run:app --log-level debug 
+web: gunicorn run:app --log-level debug 
