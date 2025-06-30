@@ -6,8 +6,11 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 
 auth_bp = Blueprint("auth", __name__)
 
-@auth_bp.route("/register", methods=["POST"])
+@auth_bp.route("/register", methods=["POST", "OPTIONS"])
 def register():
+    if request.method == "OPTIONS":
+        return '', 200
+        
     data = request.get_json()
     username = data.get("username")
     email = data.get("email")
@@ -52,8 +55,11 @@ def register():
     }), 201
 
 
-@auth_bp.route("/login", methods=["POST"])
+@auth_bp.route("/login", methods=["POST", "OPTIONS"])
 def login():
+    if request.method == "OPTIONS":
+        return '', 200
+        
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
@@ -77,9 +83,11 @@ def login():
     }), 200
 
 
-@auth_bp.route("/me", methods=["GET"])
+@auth_bp.route("/me", methods=["GET", "OPTIONS"])
 @jwt_required()
 def get_current_user_id():
-
+    if request.method == "OPTIONS":
+        return '', 200
+        
     user_id = get_jwt_identity()
     return jsonify({"user_id": user_id}), 200

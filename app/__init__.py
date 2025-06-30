@@ -23,12 +23,13 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
     
-    # Updated CORS to include Render frontend URL
+    # Updated CORS to include the correct frontend URL
     CORS(app, origins=[
         "http://127.0.0.1:5173", 
         "http://localhost:5173",
-        "https://mad-carts.onrender.com"
-    ], supports_credentials=True)
+        "https://mad-carts.onrender.com",
+        "https://mad-carts-front-end.onrender.com"
+    ], supports_credentials=True, methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"])
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(product_bp, url_prefix="/api/products")
@@ -42,5 +43,14 @@ def create_app():
     @app.route('/api/health', methods=['GET'])
     def health_check():
         return {"message": "Mad-Carts Backend is running!", "status": "healthy"}, 200
+    
+    # Global CORS handler for all routes
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', 'https://mad-carts-front-end.onrender.com')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS')
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        return response
     
     return app
